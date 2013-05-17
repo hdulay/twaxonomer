@@ -5,4 +5,12 @@
   <version>0.0.1-SNAPSHOT</version>
   <name>Twaxonomer</name>
   <description>Twitter Tweet Classifier</description>
+  <dependencies>
+	<dependency>
+		<groupId>org.apache.commons</groupId>
+		<artifactId>commons-math3</artifactId>
+		<version>3.2</version>
+		<scope>import</scope>
+	</dependency>
+</dependencies>
 </project>
