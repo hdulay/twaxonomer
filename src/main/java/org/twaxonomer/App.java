@@ -41,7 +41,6 @@ public class App
 				args[0] = "twaxonomer.properties";  
 			}
 
-			PropertiesConfiguration pc = new PropertiesConfiguration(args[0]);
 			String tweetsDir = "tweets";
 			String trainedDirName = "trained";
 			
@@ -50,7 +49,7 @@ public class App
 			File train = new File(trainedDir, "train");
 			ArrayList<String> vocab = new ArrayList<String>();
 
-			buildTrainingData(pc, dir, trainedDir, train, 15);
+			//buildTrainingData(args, dir, trainedDir, train, 15);
 			
 			ClassificationData cd = buildTrainFile(train, vocab);
 			RealMatrix trainMatrix = cd.trainMatrix;
@@ -59,22 +58,23 @@ public class App
 			Trained trained = bayes.train(trainMatrix, cd.trainCategory);
 			save(trainedDir, trained);
 			
-			RealVector tweet = bagOfWords2VecMN(vocab, "fuck".split(" "));
-			System.out.println(bayes.classify(trained, tweet));
+			while(true)
+			{
+				System.out.print(":>");
+				BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+				String line = in.readLine();
+				if(line.equals("quit")) 
+				{
+					in.close();
+					break;
+				}
+				RealVector tweet = bagOfWords2VecMN(vocab, line.split(" "));
+				int classify = bayes.classify(trained, tweet);
+				System.out.println((classify == 1) ? "bad" : "not bad");
+			}
+			
 		}
-		catch (ConfigurationException e)
-		{
-			System.err.println(e);
-		}
-		catch (MalformedURLException e)
-		{
-			System.err.println(e);
-		}
-		catch (FileNotFoundException e)
-		{
-			System.err.println(e);
-		}
-		catch (IOException e)
+		catch (Exception e)
 		{
 			System.err.println(e);
 		}
@@ -153,10 +153,11 @@ public class App
 		oos.close();
 	}
 
-	protected static void buildTrainingData(PropertiesConfiguration pc, File tweetsDir,
+	protected static void buildTrainingData(String[] args, File tweetsDir,
 											File trained, File train, int count)
-		throws FileNotFoundException, IOException
+		throws FileNotFoundException, IOException, ConfigurationException
 	{
+		PropertiesConfiguration pc = new PropertiesConfiguration(args[0]);
 		ArrayList<String> tweets = getTweets(pc, tweetsDir, count);
 		
 		if(!trained.exists()) trained.mkdir();
