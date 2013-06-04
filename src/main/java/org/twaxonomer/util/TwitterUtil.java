@@ -18,6 +18,7 @@ import org.json.JSONObject;
 
 public class TwitterUtil
 {
+	private TwitterUtil() {}
 
 	public static ArrayList<String> getTweets(PropertiesConfiguration pc, File tweetsDir, int max)
 		throws MalformedURLException, IOException, FileNotFoundException

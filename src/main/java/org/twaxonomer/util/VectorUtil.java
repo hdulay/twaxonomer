@@ -7,6 +7,8 @@ import org.apache.commons.math3.linear.RealVector;
 
 public class VectorUtil
 {
+	private VectorUtil() {}
+	
 	public static UnivariateFunction LOG = new UnivariateFunction()
 	{
 
@@ -41,5 +43,20 @@ public class VectorUtil
 	public static double[] zeros(int count)
 	{
 		return MatrixUtils.createRealMatrix(count, 1).getColumn(0);
+	}
+	
+	public static void print(RealMatrix trainMatrix)
+	{
+		System.out.println('[');
+		for (int i = 0; i < trainMatrix.getRowDimension(); i++)
+		{
+			System.out.print("  [");
+			for (int j = 0; j < trainMatrix.getColumnDimension(); j++)
+			{
+				System.out.print(trainMatrix.getEntry(i, j)+" ");
+			}
+			System.out.println("  ]");
+		}
+		System.out.println(']');
 	}
 }

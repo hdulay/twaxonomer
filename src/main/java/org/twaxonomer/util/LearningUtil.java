@@ -9,6 +9,8 @@ import org.apache.commons.math3.linear.RealVector;
 
 public class LearningUtil
 {
+	private LearningUtil() {}
+	
 	public static RealVector bagOfWords2VecMN(List<String> vocabList, String[] tweet)
 	{
 		RealMatrix mat = MatrixUtils.createRealMatrix(vocabList.size(), 1);

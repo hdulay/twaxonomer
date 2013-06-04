@@ -76,21 +76,6 @@ public class App
 		}
 	}
 
-	protected static void print(RealMatrix trainMatrix)
-	{
-		System.out.println('[');
-		for (int i = 0; i < trainMatrix.getRowDimension(); i++)
-		{
-			System.out.print("  [");
-			for (int j = 0; j < trainMatrix.getColumnDimension(); j++)
-			{
-				System.out.print(trainMatrix.getEntry(i, j)+" ");
-			}
-			System.out.println("  ]");
-		}
-		System.out.println(']');
-	}
-
 	protected static void buildTrainingData(String[] args, File tweetsDir,
 											File trained, File train, int count)
 		throws FileNotFoundException, IOException, ConfigurationException
