@@ -41,42 +41,48 @@ public class App
 				args[0] = "twaxonomer.properties";  
 			}
 
-			String tweetsDir = "tweets";
-			String trainedDirName = "trained";
-			
-			File dir = new File(tweetsDir);
-			File trainedDir = new File(dir, trainedDirName);
-			File train = new File(trainedDir, "train");
-			ArrayList<String> vocab = new ArrayList<String>();
-
-			buildTrainingData(args, dir, trainedDir, train, 1);
-			
-			ClassificationData cd = buildTrainFile(train, vocab);
-			RealMatrix trainMatrix = cd.trainMatrix;
-			
-			Bayes bayes = new Bayes();
-			Trained trained = bayes.train(trainMatrix, cd.trainCategory);
-			save(trainedDir, trained);
-			
-			while(true)
-			{
-				System.out.print(":>");
-				BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-				String line = in.readLine();
-				if(line.equals("quit")) 
-				{
-					in.close();
-					break;
-				}
-				RealVector tweet = bagOfWords2VecMN(vocab, line.split(" "));
-				int classify = bayes.classify(trained, tweet);
-				System.out.println((classify == 1) ? "bad" : "not bad");
-			}
+			classify(args);
 			
 		}
 		catch (Exception e)
 		{
 			System.err.println(e);
+		}
+	}
+
+	protected static void classify(String[] args)
+		throws FileNotFoundException, IOException, ConfigurationException
+	{
+		String tweetsDir = "tweets";
+		String trainedDirName = "trained";
+		
+		File dir = new File(tweetsDir);
+		File trainedDir = new File(dir, trainedDirName);
+		File train = new File(trainedDir, "train");
+		ArrayList<String> vocab = new ArrayList<String>();
+
+		buildTrainingData(args, dir, trainedDir, train, 1);
+		
+		ClassificationData cd = buildTrainFile(train, vocab);
+		RealMatrix trainMatrix = cd.trainMatrix;
+		
+		Bayes bayes = new Bayes();
+		Trained trained = bayes.train(trainMatrix, cd.trainCategory);
+		save(trainedDir, trained);
+		
+		while(true)
+		{
+			System.out.print(":>");
+			BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+			String line = in.readLine();
+			if(line.equals("quit")) 
+			{
+				in.close();
+				break;
+			}
+			RealVector tweet = bagOfWords2VecMN(vocab, line.split(" "));
+			int classify = bayes.classify(trained, tweet);
+			System.out.println((classify == 1) ? "bad" : "not bad");
 		}
 	}
 
