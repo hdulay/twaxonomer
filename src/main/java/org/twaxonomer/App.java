@@ -13,10 +13,10 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
 import org.twaxonomer.bayes.Bayes;
-import org.twaxonomer.bayes.ClassificationData;
+import org.twaxonomer.bayes.BayesData;
 import org.twaxonomer.bayes.Trained;
-import org.twaxonomer.util.LearningUtil;
 import org.twaxonomer.util.TwitterUtil;
+import org.twaxonomer.util.WordsUtil;
 
 public class App
 {
@@ -53,7 +53,7 @@ public class App
 
 		buildTrainingData(args, dir, trainedDir, train, 1);
 		
-		ClassificationData cd = Bayes.getClassificationData(train, vocab);
+		BayesData cd = WordsUtil.getBayesData(train, vocab);
 		RealMatrix trainMatrix = cd.trainMatrix;
 		
 		Bayes bayes = new Bayes();
@@ -70,7 +70,7 @@ public class App
 				in.close();
 				break;
 			}
-			RealVector tweet = LearningUtil.bagOfWords2VecMN(vocab, line.split(" "));
+			RealVector tweet = WordsUtil.bagOfWords2VecMN(vocab, line.split(" "));
 			int classify = bayes.classify(trained, tweet);
 			System.out.println((classify == 1) ? "bad" : "not bad");
 		}
