@@ -24,9 +24,9 @@
 			<version>1.7</version>
 		</dependency>
 		<dependency>
-	<groupId>org.json</groupId>
-	<artifactId>json</artifactId>
-	<version>20090211</version>
-</dependency>
+			<groupId>org.json</groupId>
+			<artifactId>json</artifactId>
+			<version>20090211</version>
+		</dependency>
 	</dependencies>
 </project>
