@@ -49,7 +49,7 @@ public class App
 			File train = new File(trainedDir, "train");
 			ArrayList<String> vocab = new ArrayList<String>();
 
-			//buildTrainingData(args, dir, trainedDir, train, 15);
+			buildTrainingData(args, dir, trainedDir, train, 1);
 			
 			ClassificationData cd = buildTrainFile(train, vocab);
 			RealMatrix trainMatrix = cd.trainMatrix;
@@ -189,7 +189,6 @@ public class App
 				break;
 			}
 		}
-		in.close();
 	}
 
 	private static ArrayList<String> getTweets(PropertiesConfiguration pc, File tweetsDir, int max)
