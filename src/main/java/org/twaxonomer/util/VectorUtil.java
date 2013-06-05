@@ -1,5 +1,7 @@
 package org.twaxonomer.util;
 
+import java.util.Random;
+
 import org.apache.commons.math3.analysis.UnivariateFunction;
 import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
@@ -19,6 +21,32 @@ public class VectorUtil
 		}
 	};
 
+	public static double min(RealVector vect)
+	{
+		double min = Double.NaN;
+		double[] data = vect.toArray();
+		for (int i = 0; i < data.length; i++)
+		{
+			if(min > data[i]) min = data[i];
+		}
+		if (min == Double.NaN)
+			throw new IllegalArgumentException("vector doesn't contain a value");
+		return min;
+	}
+	
+	public static double max(RealVector vect)
+	{
+		double max = Double.NaN;
+		double[] data = vect.toArray();
+		for (int i = 0; i < data.length; i++)
+		{
+			if(max < data[i]) max = data[i];
+		}
+		if (max == Double.NaN)
+			throw new IllegalArgumentException("vector doesn't contain a value");
+		return max;
+	}
+	
 	public static double sum(RealVector vect)
 	{
 		double sum = 0;
@@ -28,6 +56,21 @@ public class VectorUtil
 			sum += data[i];
 		}
 		return sum;
+	}
+	
+	public static RealMatrix rand(int rows, int col)
+	{
+		RealMatrix m = MatrixUtils.createRealMatrix(rows, col);
+		Random r = new Random();
+		for (int i = 0; i < m.getColumnDimension(); i++)
+		{
+			RealVector v = m.getColumnVector(i);
+			for (int j = 0; j < v.getDimension(); j++)
+			{
+				v.setEntry(j, r.nextDouble());
+			}
+		}
+		return m;
 	}
 
 	public static RealVector ones(int rows)
