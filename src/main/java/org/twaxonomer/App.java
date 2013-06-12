@@ -7,14 +7,20 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.HashMap;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.ml.distance.DistanceMeasure;
+import org.apache.commons.math3.ml.distance.EuclideanDistance;
 import org.twaxonomer.bayes.Bayes;
 import org.twaxonomer.bayes.BayesData;
 import org.twaxonomer.bayes.Trained;
+import org.twaxonomer.kmeans.kMeans;
+import org.twaxonomer.kmeans.kMeansData;
 import org.twaxonomer.util.TwitterUtil;
 import org.twaxonomer.util.WordsUtil;
 
@@ -33,10 +39,30 @@ public class App
 
 			classify(args);
 			
+			cluster(args);
+			
 		}
 		catch (Exception e)
 		{
 			System.err.println(e);
+		}
+	}
+
+	protected static void cluster(String[] args)
+	{
+		kMeans kmeans = new kMeans();
+		RealMatrix dataSet = MatrixUtils.createRealMatrix(1, 1);
+		int k = 4;
+		DistanceMeasure distance = new EuclideanDistance();
+		kMeansData data = kmeans.cluster(dataSet, k, distance);
+		RealMatrix cent = data.centroids;
+		RealMatrix clust = data.clusterAssment;
+		
+		HashMap<Double, String> clusters = new HashMap<Double, String>();
+		for (int i = 0; i < clust.getColumnDimension(); i++)
+		{
+			RealVector row = clust.getRowVector(i);
+			clusters.put(row.getEntry(0), ""+row.getEntry(1));
 		}
 	}
 

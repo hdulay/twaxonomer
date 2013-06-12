@@ -1,5 +1,7 @@
 package org.twaxonomer.util;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 
 import org.apache.commons.math3.analysis.UnivariateFunction;
@@ -20,7 +22,7 @@ public class VectorUtil
 			return log2;
 		}
 	};
-
+	
 	public static double min(RealVector vect)
 	{
 		double min = Double.NaN;
@@ -88,6 +90,22 @@ public class VectorUtil
 		return MatrixUtils.createRealMatrix(count, 1).getColumn(0);
 	}
 	
+	public static List<MatIndex> nonzeros(RealMatrix m)
+	{
+		ArrayList<MatIndex> list = new ArrayList<MatIndex>();
+		double[][] data = m.getData();
+		for (int row = 0; row < data.length; row++)
+		{
+			double[] data2 = data[row];
+			for (int col = 0; col < data2.length; col++)
+			{
+				if(data2[col] != 0)
+					list.add(new MatIndex(row, col));
+			}
+		}
+		return list;
+	}
+	
 	public static void print(RealMatrix trainMatrix)
 	{
 		System.out.println('[');
@@ -101,5 +119,40 @@ public class VectorUtil
 			System.out.println("  ]");
 		}
 		System.out.println(']');
+	}
+
+	public static RealMatrix getData(List<MatIndex> indices, RealMatrix dataSet)
+	{
+		double[][] data = new double[1][indices.size()];
+		for (int i = 0; i < data.length; i++)
+		{
+			MatIndex index = indices.get(i);
+			double value = dataSet.getEntry(index.row, index.col);
+			if(value != 0) data[0][i] = value;
+		}
+		return MatrixUtils.createRealMatrix(data);
+	}
+
+	public static double mean(RealVector dataSet)
+	{
+		double mean = 0;
+		for (int j = 0; j < dataSet.getDimension(); j++)
+		{
+			mean += dataSet.getEntry(j);
+		}
+		return mean / dataSet.getDimension();
+	}
+
+	public static RealVector mean(RealMatrix dataSet)
+	{
+		RealMatrix tmp = MatrixUtils.createRealMatrix(1, dataSet.getColumnDimension());
+		RealVector v = tmp.getColumnVector(0);
+		for (int i = 0; i < dataSet.getColumnDimension(); i++)
+		{
+			RealVector col = dataSet.getColumnVector(i);
+			v.setEntry(i, mean(col));
+		}
+		
+		return v;
 	}
 }
