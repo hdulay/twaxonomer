@@ -7,21 +7,25 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.List;
 
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.math3.linear.MatrixUtils;
 import org.apache.commons.math3.linear.RealMatrix;
 import org.apache.commons.math3.linear.RealVector;
+import org.apache.commons.math3.ml.clustering.CentroidCluster;
+import org.apache.commons.math3.ml.clustering.Cluster;
+import org.apache.commons.math3.ml.clustering.Clusterable;
+import org.apache.commons.math3.ml.clustering.DBSCANClusterer;
+import org.apache.commons.math3.ml.clustering.DoublePoint;
+import org.apache.commons.math3.ml.clustering.KMeansPlusPlusClusterer;
+import org.apache.commons.math3.ml.clustering.MultiKMeansPlusPlusClusterer;
 import org.apache.commons.math3.ml.distance.DistanceMeasure;
 import org.apache.commons.math3.ml.distance.EuclideanDistance;
 import org.twaxonomer.bayes.Bayes;
-import org.twaxonomer.bayes.BayesData;
 import org.twaxonomer.bayes.Trained;
-import org.twaxonomer.kmeans.kMeans;
-import org.twaxonomer.kmeans.kMeansData;
 import org.twaxonomer.util.TwitterUtil;
+import org.twaxonomer.util.WordsData;
 import org.twaxonomer.util.WordsUtil;
 
 public class App
@@ -37,33 +41,118 @@ public class App
 				args[0] = "twaxonomer.properties";  
 			}
 
-			classify(args);
+//			classify(args);
 			
-			cluster(args);
+			kmeans(args);
 			
 		}
 		catch (Exception e)
 		{
-			System.err.println(e);
+			e.printStackTrace();
 		}
 	}
 
-	protected static void cluster(String[] args)
+	protected static void kmeans(String[] args)
+		throws FileNotFoundException, IOException
 	{
-		kMeans kmeans = new kMeans();
-		RealMatrix dataSet = MatrixUtils.createRealMatrix(1, 1);
-		int k = 4;
-		DistanceMeasure distance = new EuclideanDistance();
-		kMeansData data = kmeans.cluster(dataSet, k, distance);
-		RealMatrix cent = data.centroids;
-		RealMatrix clust = data.clusterAssment;
 		
-		HashMap<Double, String> clusters = new HashMap<Double, String>();
-		for (int i = 0; i < clust.getColumnDimension(); i++)
+		String tweetsDir = "tweets";
+		String trainedDirName = "trained";
+		
+		File dir = new File(tweetsDir);
+		File trainedDir = new File(dir, trainedDirName);
+		File train = new File(trainedDir, "train");
+		ArrayList<String> vocab = new ArrayList<String>();
+		WordsData words = WordsUtil.getWordsData(train, vocab, 3);
+		
+		DistanceMeasure measure = new EuclideanDistance();
+
+		ArrayList<Clusterable> mat = new ArrayList<Clusterable>();
+		for (int i = 0; i < words.wordsMatrix.getRowDimension(); i++)
 		{
-			RealVector row = clust.getRowVector(i);
-			clusters.put(row.getEntry(0), ""+row.getEntry(1));
+			DoublePoint dp = new DoublePoint(words.wordsMatrix.getRow(i));
+			mat.add(dp);
 		}
+
+		KMeansPlusPlusClusterer<Clusterable> km = new KMeansPlusPlusClusterer<Clusterable>(20, 100, measure);
+		printKmeans(vocab, words, km.cluster(mat));
+		
+		MultiKMeansPlusPlusClusterer<Clusterable> mkm = new MultiKMeansPlusPlusClusterer<Clusterable>(km, 10);
+		printKmeans(vocab, words, mkm.cluster(mat));
+		
+		DBSCANClusterer<Clusterable> dbscan = new DBSCANClusterer<Clusterable>(1.3, 1, measure);
+		List<Cluster<Clusterable>> clusters = dbscan.cluster(mat);
+		printDbscan(vocab, words, clusters);
+	}
+
+	private static void printDbscan(ArrayList<String> vocab, WordsData words,
+								List<Cluster<Clusterable>> clusters)
+	{
+		System.out.println("==================================================");
+		for (Cluster<Clusterable> cluster : clusters)
+		{
+			StringBuilder sb = new StringBuilder();
+			sb.append("***dbscan:\n");
+			sb.append(cluster);
+			sb.append("\n***\n");
+			List<Clusterable> points = cluster.getPoints();
+			for (int i = 0; i < points.size(); i++)
+			{
+				Clusterable point = points.get(i);
+				sb.append("\t"+findTweet(words, point)+"\n");
+			}
+			System.out.println(sb.toString());
+		}
+	}
+
+	private static void printKmeans(ArrayList<String> vocab, WordsData words,
+								List<CentroidCluster<Clusterable>> centroids)
+	{
+		System.out.println("==================================================");
+		for (CentroidCluster<Clusterable> centroid : centroids)
+		{
+			StringBuilder sb = new StringBuilder();
+			double[] mean = centroid.getCenter().getPoint();
+			sb.append("***kmeans:\n");
+			for (int i = 0; i < mean.length; i++)
+			{
+				double mn = mean[i];
+				if(mn > .5)
+				{
+					String string = vocab.get(i);
+					sb.append("["+string+"|"+mn+"]");
+				}
+			}
+			sb.append("\n***\n");
+			List<Clusterable> points = centroid.getPoints();
+			for (int i = 0; i < points.size(); i++)
+			{
+				Clusterable point = points.get(i);
+				sb.append("\t"+findTweet(words, point)+"\n");
+			}
+			System.out.println(sb.toString());
+		}
+	}
+
+	private static String findTweet(WordsData words, Clusterable point)
+	{
+		for (int j = 0; j < words.wordsMatrix.getRowDimension(); j++)
+		{
+			double[] row = words.wordsMatrix.getRow(j);
+			boolean match = true;
+			for (int k = 0; k < row.length; k++)
+			{
+				if(row[k] == point.getPoint()[k]) 
+					continue;
+				else
+				{
+					match = false;
+					break;
+				}
+			}
+			if(match) return words.strings.get(j);
+		}
+		return "not found";
 	}
 
 	protected static void classify(String[] args)
@@ -79,8 +168,8 @@ public class App
 
 		buildTrainingData(args, dir, trainedDir, train, 1);
 		
-		BayesData cd = WordsUtil.getBayesData(train, vocab);
-		RealMatrix trainMatrix = cd.trainMatrix;
+		WordsData cd = WordsUtil.getWordsData(train, vocab, 0);
+		RealMatrix trainMatrix = cd.wordsMatrix;
 		
 		Bayes bayes = new Bayes();
 		Trained trained = bayes.train(trainMatrix, cd.trainCategory);
@@ -96,7 +185,7 @@ public class App
 				in.close();
 				break;
 			}
-			RealVector tweet = WordsUtil.bagOfWords2VecMN(vocab, line.split(" "));
+			RealVector tweet = WordsUtil.bagOfWords2VecMN(vocab, line.split(" "), 0);
 			int classify = bayes.classify(trained, tweet);
 			System.out.println((classify == 1) ? "bad" : "not bad");
 		}

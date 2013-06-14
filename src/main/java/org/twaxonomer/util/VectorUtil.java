@@ -25,26 +25,27 @@ public class VectorUtil
 	
 	public static double min(RealVector vect)
 	{
-		double min = Double.NaN;
+		double min = Double.MAX_VALUE;
 		double[] data = vect.toArray();
 		for (int i = 0; i < data.length; i++)
 		{
 			if(min > data[i]) min = data[i];
 		}
-		if (min == Double.NaN)
+		if (min == Double.MAX_VALUE)
 			throw new IllegalArgumentException("vector doesn't contain a value");
 		return min;
 	}
 	
 	public static double max(RealVector vect)
 	{
-		double max = Double.NaN;
+		double max = Double.NEGATIVE_INFINITY;
 		double[] data = vect.toArray();
 		for (int i = 0; i < data.length; i++)
 		{
-			if(max < data[i]) max = data[i];
+			double v = data[i];
+			if(max < v) max = v;
 		}
-		if (max == Double.NaN)
+		if (max == Double.NEGATIVE_INFINITY)
 			throw new IllegalArgumentException("vector doesn't contain a value");
 		return max;
 	}
@@ -145,14 +146,56 @@ public class VectorUtil
 
 	public static RealVector mean(RealMatrix dataSet)
 	{
-		RealMatrix tmp = MatrixUtils.createRealMatrix(1, dataSet.getColumnDimension());
-		RealVector v = tmp.getColumnVector(0);
+		double[] array = new double[dataSet.getColumnDimension()];
 		for (int i = 0; i < dataSet.getColumnDimension(); i++)
 		{
 			RealVector col = dataSet.getColumnVector(i);
-			v.setEntry(i, mean(col));
+			array[i] = mean(col);
 		}
-		
+		RealVector v = MatrixUtils.createRealVector(array);
 		return v;
+	}
+
+	public static RealMatrix points(RealMatrix mat, SelectorFunction function)
+	{
+		ArrayList<RealVector> rows = new ArrayList<RealVector>();
+		double[][] data = mat.getData();
+		for (int i = 0; i < data.length; i++)
+		{
+			if(function.keep(data[i])) 
+				rows.add(mat.getRowVector(i));
+		}
+		int colsize = mat.getColumnDimension();
+		RealMatrix m = MatrixUtils.createRealMatrix(rows.size(), colsize);
+		for (int i = 0; i < rows.size(); i++)
+		{
+			for (int j = 0; j < colsize; j++)
+			{
+				m.setEntry(i, j, data[i][j]);
+			}
+		}
+		return m;
+	}
+
+	public static void setPoints(RealMatrix mat, SetterFunction setterFunction)
+	{
+		double[][] data = mat.getData();
+		for (int i = 0; i < data.length; i++)
+		{
+			for (int j = 0; j < data[i].length; j++)
+			{
+				setterFunction.set(mat, i, j);
+			}
+		}
+	}
+
+	public static RealMatrix createRealMatrix(ArrayList<RealVector> vectors)
+	{
+		RealMatrix m = MatrixUtils.createRealMatrix(vectors.size(), 2);
+		for (int i = 0; i < vectors.size(); i++)
+		{
+			m.setRowVector(i, vectors.get(i));
+		}
+		return m;
 	}
 }
